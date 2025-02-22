@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Transaction } from "@shared/schema";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns";
+import { isWithinInterval, startOfDay, endOfDay, format, parseISO } from "date-fns";
 import DashboardStats from "@/components/dashboard-stats";
 import TransactionDialog from "@/components/transaction-dialog";
 import { DateRangePicker } from "@/components/date-range-picker";
@@ -28,23 +28,16 @@ export default function Dashboard() {
   const filteredTransactions = transactions?.filter((transaction) => {
     if (!dateRange?.from) return true;
 
-    const transactionDate = new Date(transaction.date);
-    const fromDate = dateRange.from;
-    const toDate = dateRange.to || dateRange.from;
+    const transactionDate = parseISO(transaction.date);
+    const fromDate = startOfDay(dateRange.from);
+    const toDate = endOfDay(dateRange.to || dateRange.from);
 
-    // Set time to midnight for accurate date comparison
-    fromDate.setHours(0, 0, 0, 0);
-    toDate.setHours(23, 59, 59, 999);
-    transactionDate.setHours(12, 0, 0, 0); // Set to noon to avoid any timezone issues
-
-    return transactionDate >= fromDate && transactionDate <= toDate;
+    return isWithinInterval(transactionDate, { start: fromDate, end: toDate });
   });
 
   // Group transactions by date accounting for timezone
   const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
-    const date = new Date(transaction.date);
-    // Ensure consistent date formatting
-    date.setHours(12, 0, 0, 0); // Set to noon to avoid any timezone issues
+    const date = parseISO(transaction.date);
     const dateStr = format(date, 'yyyy-MM-dd');
 
     if (!groups[dateStr]) {
