@@ -14,6 +14,7 @@ import { PencilIcon, Trash2Icon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EditTransactionDialog from "@/components/edit-transaction-dialog";
+import CashFlowChart from "@/components/cash-flow-chart";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -58,6 +59,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="space-y-4">
+        <Skeleton className="h-[400px]" />
         <div className="grid gap-4 md:grid-cols-3">
           {Array(3).fill(0).map((_, i) => (
             <Skeleton key={i} className="h-[120px]" />
@@ -74,6 +76,8 @@ export default function Dashboard() {
         <h1 className="text-3xl font-bold">Financial Dashboard</h1>
         <TransactionDialog />
       </div>
+
+      <CashFlowChart transactions={filteredTransactions || []} />
 
       <DashboardStats transactions={filteredTransactions || []} />
 
@@ -99,7 +103,7 @@ export default function Dashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTransactions?.sort((a, b) => 
+              {filteredTransactions?.sort((a, b) =>
                 new Date(b.date).getTime() - new Date(a.date).getTime()
               ).map((transaction) => (
                 <TableRow key={transaction.id}>
