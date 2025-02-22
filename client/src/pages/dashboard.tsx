@@ -86,7 +86,6 @@ export default function Dashboard() {
       </div>
 
       <DashboardStats transactions={filteredTransactions || []} />
-      <DashboardChart transactions={filteredTransactions || []} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
