@@ -15,6 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EditTransactionDialog from "@/components/edit-transaction-dialog";
 import DuplicateTransactionDialog from "@/components/duplicate-transaction-dialog";
+import CashflowChart from "@/components/cashflow-chart";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -74,18 +75,22 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Financial Dashboard</h1>
-        <TransactionDialog />
       </div>
+
+      <CashflowChart transactions={transactions || []} />
 
       <DashboardStats transactions={filteredTransactions || []} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Transactions</CardTitle>
-          <DateRangePicker
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-          />
+          <div className="flex items-center gap-4">
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+            />
+            <TransactionDialog />
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
