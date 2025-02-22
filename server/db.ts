@@ -12,7 +12,7 @@ const db = drizzle(sqlite, { schema });
 db.run(`CREATE TABLE IF NOT EXISTS transactions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   type TEXT NOT NULL,
-  category TEXT NOT NULL,
+  category TEXT,
   account_type TEXT NOT NULL,
   amount REAL NOT NULL,
   description TEXT NOT NULL,
