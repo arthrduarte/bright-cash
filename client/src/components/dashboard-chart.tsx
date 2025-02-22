@@ -16,41 +16,57 @@ export default function DashboardChart({ transactions }: DashboardChartProps) {
       return acc;
     }, {} as Record<string, number>);
 
-  const data = Object.entries(expensesByCategory).map(([name, value]) => ({
-    name,
-    value,
-  }));
+  const data = Object.entries(expensesByCategory)
+    .map(([name, value]) => ({
+      name,
+      value,
+    }))
+    .sort((a, b) => b.value - a.value); // Sort by value in descending order
+
+  const totalExpenses = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <Card className="mt-4">
       <CardHeader>
         <CardTitle>Expenses by Category</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Total Expenses: ${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
       </CardHeader>
       <CardContent>
         <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={150}
-                label={({ name, percent }) => 
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {data.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          {data.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={150}
+                  label={({ name, value, percent }) => 
+                    `${name}: $${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${(percent * 100).toFixed(1)}%)`
+                  }
+                >
+                  {data.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value: number) => [
+                    `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    'Amount'
+                  ]}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-muted-foreground">
+              No expenses found for the selected period
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

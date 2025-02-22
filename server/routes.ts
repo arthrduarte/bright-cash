@@ -4,9 +4,21 @@ import { storage } from "./storage";
 import { insertTransactionSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express) {
-  app.get("/api/transactions", async (_req, res) => {
-    const transactions = await storage.getTransactions();
-    res.json(transactions);
+  app.get("/api/transactions", async (req, res) => {
+    const month = req.query.month ? parseInt(req.query.month as string) : undefined;
+    const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+
+    try {
+      if (month !== undefined && year !== undefined) {
+        const transactions = await storage.getTransactionsByMonth(month, year);
+        res.json(transactions);
+      } else {
+        const transactions = await storage.getTransactions();
+        res.json(transactions);
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
   });
 
   app.post("/api/transactions", async (req, res) => {
