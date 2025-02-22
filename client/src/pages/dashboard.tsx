@@ -10,16 +10,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, Trash2Icon, CopyIcon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EditTransactionDialog from "@/components/edit-transaction-dialog";
+import DuplicateTransactionDialog from "@/components/duplicate-transaction-dialog";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [duplicatingTransaction, setDuplicatingTransaction] = useState<Transaction | null>(null);
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -128,6 +130,13 @@ export default function Dashboard() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => setDuplicatingTransaction(transaction)}
+                      >
+                        <CopyIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setEditingTransaction(transaction)}
                       >
                         <PencilIcon className="h-4 w-4" />
@@ -135,7 +144,7 @@ export default function Dashboard() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteMutation.mutate(transaction.id)}
+                        onClick={() => deleteMutation.mutate(transaction.id!)}
                         disabled={deleteMutation.isPending}
                       >
                         <Trash2Icon className="h-4 w-4" />
@@ -152,6 +161,11 @@ export default function Dashboard() {
         transaction={editingTransaction!}
         open={editingTransaction !== null}
         onOpenChange={(open) => !open && setEditingTransaction(null)}
+      />
+      <DuplicateTransactionDialog
+        transaction={duplicatingTransaction}
+        open={duplicatingTransaction !== null}
+        onOpenChange={(open) => !open && setDuplicatingTransaction(null)}
       />
     </div>
   );
