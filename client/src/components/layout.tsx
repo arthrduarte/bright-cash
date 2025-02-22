@@ -20,14 +20,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     Dashboard
                   </a>
                 </Link>
-                <Link href="/transactions">
-                  <a className={cn(
-                    "px-3 py-2 rounded-md text-sm font-medium",
-                    location === "/transactions" ? "bg-primary/10 text-primary" : "text-foreground/60 hover:text-foreground"
-                  )}>
-                    Transactions
-                  </a>
-                </Link>
               </div>
             </div>
           </div>
