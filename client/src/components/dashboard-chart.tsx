@@ -9,9 +9,9 @@ interface DashboardChartProps {
 
 export default function DashboardChart({ transactions }: DashboardChartProps) {
   const expensesByCategory = transactions
-    .filter(t => t.type === "expense")
+    .filter(t => t.type === "expense" && t.category) // Only include transactions with categories
     .reduce((acc, t) => {
-      const category = t.category;
+      const category = t.category as string; // We know category exists due to filter
       acc[category] = (acc[category] || 0) + Number(t.amount);
       return acc;
     }, {} as Record<string, number>);

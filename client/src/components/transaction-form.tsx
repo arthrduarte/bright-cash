@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InsertTransaction, insertTransactionSchema, transactionTypes, accountTypes, Transaction } from "@shared/schema";
+import { InsertTransaction, insertTransactionSchema, transactionTypes, accountTypes, transactionCategories } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format, startOfDay } from "date-fns";
-import { EXPENSE_CATEGORIES } from "@/lib/constants";
+import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +27,7 @@ export default function TransactionForm({ transaction, onSuccess }: TransactionF
     defaultValues: transaction ? {
       type: transaction.type,
       accountType: transaction.accountType,
-      category: transaction.category,
+      category: transaction.category || undefined,
       amount: Number(transaction.amount),
       description: transaction.description,
       date: new Date(transaction.date),
@@ -37,7 +36,7 @@ export default function TransactionForm({ transaction, onSuccess }: TransactionF
       accountType: "chequing",
       amount: 0,
       description: "",
-      date: new Date(), // Use current date
+      date: new Date(),
     },
   });
 
@@ -130,14 +129,14 @@ export default function TransactionForm({ transaction, onSuccess }: TransactionF
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || undefined}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {EXPENSE_CATEGORIES.map((category) => (
+                    {transactionCategories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
