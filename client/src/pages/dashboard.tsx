@@ -28,23 +28,23 @@ export default function Dashboard() {
   const filteredTransactions = transactions?.filter((transaction) => {
     if (!dateRange?.from) return true;
 
-    // Ensure we're using UTC dates for comparison
     const transactionDate = new Date(transaction.date);
-    transactionDate.setHours(0, 0, 0, 0);
+    const fromDate = dateRange.from;
+    const toDate = dateRange.to || dateRange.from;
 
-    const fromDate = startOfDay(dateRange.from);
-    const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+    // Set time to midnight for accurate date comparison
+    fromDate.setHours(0, 0, 0, 0);
+    toDate.setHours(23, 59, 59, 999);
+    transactionDate.setHours(12, 0, 0, 0); // Set to noon to avoid any timezone issues
 
-    return isWithinInterval(transactionDate, {
-      start: fromDate,
-      end: toDate,
-    });
+    return transactionDate >= fromDate && transactionDate <= toDate;
   });
 
   // Group transactions by date accounting for timezone
   const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
-    // Create date string in local timezone
     const date = new Date(transaction.date);
+    // Ensure consistent date formatting
+    date.setHours(12, 0, 0, 0); // Set to noon to avoid any timezone issues
     const dateStr = format(date, 'yyyy-MM-dd');
 
     if (!groups[dateStr]) {
@@ -129,8 +129,8 @@ export default function Dashboard() {
                         <TableRow key={transaction.id}>
                           <TableCell>
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              transaction.type === 'expense' 
-                                ? 'bg-red-100 text-red-800' 
+                              transaction.type === 'expense'
+                                ? 'bg-red-100 text-red-800'
                                 : transaction.type === 'income'
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-blue-100 text-blue-800'

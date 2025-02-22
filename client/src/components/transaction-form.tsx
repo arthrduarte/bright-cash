@@ -37,7 +37,7 @@ export default function TransactionForm({ transaction, onSuccess }: TransactionF
       accountType: "chequing",
       amount: 0,
       description: "",
-      date: startOfDay(new Date()), // Ensure we start with midnight of current day
+      date: new Date(), // Use current date
     },
   });
 
