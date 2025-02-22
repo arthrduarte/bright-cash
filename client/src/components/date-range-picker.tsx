@@ -1,5 +1,5 @@
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,44 @@ export function DateRangePicker({
   dateRange,
   onDateRangeChange,
 }: DateRangePickerProps) {
+  const handlePreviousMonth = () => {
+    const today = new Date();
+    const previousMonth = subMonths(today, 1);
+    onDateRangeChange({
+      from: startOfMonth(previousMonth),
+      to: endOfMonth(previousMonth)
+    });
+  };
+
+  const handleCurrentMonth = () => {
+    const today = new Date();
+    onDateRangeChange({
+      from: startOfMonth(today),
+      to: endOfMonth(today)
+    });
+  };
+
   return (
-    <div className="grid gap-2">
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handlePreviousMonth}
+      >
+        Previous Month
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleCurrentMonth}
+      >
+        Current Month
+      </Button>
       <Popover>
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={"outline"}
+            variant="outline"
             className={cn(
               "w-[300px] justify-start text-left font-normal",
               !dateRange && "text-muted-foreground"
