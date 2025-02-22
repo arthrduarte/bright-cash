@@ -21,7 +21,7 @@ export const transactionCategories = [
 ] as const;
 
 export const transactionTypes = ["expense", "income", "investment"] as const;
-export const accountTypes = ["debit", "credit", "investment"] as const;
+export const accountTypes = ["chequing", "credit"] as const;
 
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
@@ -30,7 +30,7 @@ export const transactions = pgTable("transactions", {
   accountType: text("account_type", { enum: accountTypes }).notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   description: text("description").notNull(),
-  date: timestamp("date").notNull().defaultNow(),
+  date: timestamp("date").notNull(),
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions)
