@@ -1,4 +1,6 @@
-import { Transaction, InsertTransaction } from "@shared/schema";
+import { Transaction, InsertTransaction, transactions } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getTransactions(): Promise<Transaction[]>;
@@ -6,29 +8,22 @@ export interface IStorage {
   deleteTransaction(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private transactions: Map<number, Transaction>;
-  private currentId: number;
-
-  constructor() {
-    this.transactions = new Map();
-    this.currentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getTransactions(): Promise<Transaction[]> {
-    return Array.from(this.transactions.values());
+    return await db.select().from(transactions);
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    const id = this.currentId++;
-    const transaction: Transaction = { ...insertTransaction, id };
-    this.transactions.set(id, transaction);
+    const [transaction] = await db
+      .insert(transactions)
+      .values(insertTransaction)
+      .returning();
     return transaction;
   }
 
   async deleteTransaction(id: number): Promise<void> {
-    this.transactions.delete(id);
+    await db.delete(transactions).where(eq(transactions.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

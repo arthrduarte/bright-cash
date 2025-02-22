@@ -1,4 +1,4 @@
-import { pgTable, text, serial, decimal, timestamp, boolean } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -23,14 +23,14 @@ export const transactionCategories = [
 export const transactionTypes = ["expense", "income", "investment"] as const;
 export const accountTypes = ["chequing", "credit"] as const;
 
-export const transactions = pgTable("transactions", {
-  id: serial("id").primaryKey(),
+export const transactions = sqliteTable("transactions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   type: text("type", { enum: transactionTypes }).notNull(),
   category: text("category", { enum: transactionCategories }).notNull(),
   accountType: text("account_type", { enum: accountTypes }).notNull(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  amount: real("amount").notNull(),
   description: text("description").notNull(),
-  date: timestamp("date").notNull(),
+  date: integer("date", { mode: "timestamp" }).notNull(),
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions)
