@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 export interface IStorage {
   getTransactions(): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  updateTransaction(id: number, transaction: InsertTransaction): Promise<Transaction>;
   deleteTransaction(id: number): Promise<void>;
 }
 
@@ -17,6 +18,15 @@ export class DatabaseStorage implements IStorage {
     const [transaction] = await db
       .insert(transactions)
       .values(insertTransaction)
+      .returning();
+    return transaction;
+  }
+
+  async updateTransaction(id: number, updateTransaction: InsertTransaction): Promise<Transaction> {
+    const [transaction] = await db
+      .update(transactions)
+      .set(updateTransaction)
+      .where(eq(transactions.id, id))
       .returning();
     return transaction;
   }

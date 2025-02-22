@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InsertTransaction, insertTransactionSchema, transactionTypes, accountTypes } from "@shared/schema";
+import { InsertTransaction, insertTransactionSchema, transactionTypes, accountTypes, Transaction } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,24 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-export default function TransactionForm() {
+interface TransactionFormProps {
+  transaction?: Transaction;
+  onSuccess?: () => void;
+}
+
+export default function TransactionForm({ transaction, onSuccess }: TransactionFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const form = useForm<InsertTransaction>({
     resolver: zodResolver(insertTransactionSchema),
-    defaultValues: {
+    defaultValues: transaction ? {
+      type: transaction.type,
+      accountType: transaction.accountType,
+      category: transaction.category,
+      amount: Number(transaction.amount),
+      description: transaction.description,
+      date: new Date(transaction.date),
+    } : {
       type: "expense",
       accountType: "chequing",
       amount: 0,
@@ -31,15 +43,22 @@ export default function TransactionForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertTransaction) => {
-      const res = await apiRequest("POST", "/api/transactions", data);
+      const res = await apiRequest(
+        transaction ? "PUT" : "POST",
+        transaction ? `/api/transactions/${transaction.id}` : "/api/transactions",
+        data
+      );
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      form.reset();
+      if (!transaction) {
+        form.reset();
+      }
+      onSuccess?.();
       toast({
         title: "Success",
-        description: "Transaction added successfully",
+        description: `Transaction ${transaction ? 'updated' : 'added'} successfully`,
       });
     },
     onError: (error) => {
@@ -199,7 +218,7 @@ export default function TransactionForm() {
         />
 
         <Button type="submit" disabled={mutation.isPending}>
-          Add Transaction
+          {transaction ? 'Update' : 'Add'} Transaction
         </Button>
       </form>
     </Form>

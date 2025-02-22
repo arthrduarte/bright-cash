@@ -12,14 +12,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Trash2Icon } from "lucide-react";
+import { PencilIcon, Trash2Icon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import EditTransactionDialog from "@/components/edit-transaction-dialog";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -89,7 +91,7 @@ export default function Dashboard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Transactions</CardTitle>
-          <DateRangePicker 
+          <DateRangePicker
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
           />
@@ -117,14 +119,23 @@ export default function Dashboard() {
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>${Number(transaction.amount).toFixed(2)}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteMutation.mutate(transaction.id)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2Icon className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingTransaction(transaction)}
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteMutation.mutate(transaction.id)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2Icon className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -132,6 +143,11 @@ export default function Dashboard() {
           </Table>
         </CardContent>
       </Card>
+      <EditTransactionDialog
+        transaction={editingTransaction!}
+        open={editingTransaction !== null}
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+      />
     </div>
   );
 }

@@ -18,6 +18,19 @@ export async function registerRoutes(app: Express) {
     res.json(transaction);
   });
 
+  app.put("/api/transactions/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid ID" });
+    }
+    const result = insertTransactionSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const transaction = await storage.updateTransaction(id, result.data);
+    res.json(transaction);
+  });
+
   app.delete("/api/transactions/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
