@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Transaction } from "@shared/schema";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, parseISO, startOfDay, endOfDay, format } from "date-fns";
+import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns";
 import DashboardStats from "@/components/dashboard-stats";
 import TransactionDialog from "@/components/transaction-dialog";
 import { DateRangePicker } from "@/components/date-range-picker";
@@ -28,7 +28,7 @@ export default function Dashboard() {
   const filteredTransactions = transactions?.filter((transaction) => {
     if (!dateRange?.from) return true;
 
-    const transactionDate = parseISO(transaction.date.toString());
+    const transactionDate = new Date(transaction.date);
 
     if (dateRange.to) {
       return isWithinInterval(transactionDate, {
@@ -108,8 +108,8 @@ export default function Dashboard() {
             {groupedTransactions && Object.entries(groupedTransactions)
               .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
               .map(([date, transactions]) => (
-                <div key={date} className="space-y-4">
-                  <h3 className="font-medium text-muted-foreground">
+                <div key={date} className="space-y-2">
+                  <h3 className="text-lg font-semibold text-foreground/80 px-4 py-2">
                     {format(new Date(date), 'MMMM d, yyyy')}
                   </h3>
                   <Table>
@@ -119,20 +119,34 @@ export default function Dashboard() {
                         <TableHead>Account</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Description</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead></TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="w-[100px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {transactions.map((transaction) => (
                         <TableRow key={transaction.id}>
-                          <TableCell className="capitalize">{transaction.type}</TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              transaction.type === 'expense' 
+                                ? 'bg-red-100 text-red-800' 
+                                : transaction.type === 'income'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                            </span>
+                          </TableCell>
                           <TableCell className="capitalize">{transaction.accountType}</TableCell>
                           <TableCell>{transaction.category}</TableCell>
                           <TableCell>{transaction.description}</TableCell>
-                          <TableCell>${Number(transaction.amount).toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            <span className={transaction.type === 'expense' ? 'text-red-600' : 'text-green-600'}>
+                              ${Number(transaction.amount).toFixed(2)}
+                            </span>
+                          </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 justify-end">
                               <Button
                                 variant="ghost"
                                 size="icon"
