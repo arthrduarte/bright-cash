@@ -1,23 +1,46 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Transaction } from "@shared/schema";
+import { useState } from "react";
+import { DateRange } from "react-day-picker";
+import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns";
 import DashboardStats from "@/components/dashboard-stats";
 import DashboardChart from "@/components/dashboard-chart";
 import TransactionDialog from "@/components/transaction-dialog";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Trash2Icon } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
+  });
+
+  const filteredTransactions = transactions?.filter((transaction) => {
+    if (!dateRange?.from) return true;
+
+    const transactionDate = parseISO(transaction.date.toString());
+
+    if (dateRange.to) {
+      return isWithinInterval(transactionDate, {
+        start: startOfDay(dateRange.from),
+        end: endOfDay(dateRange.to),
+      });
+    }
+
+    return isWithinInterval(transactionDate, {
+      start: startOfDay(dateRange.from),
+      end: endOfDay(dateRange.from),
+    });
   });
 
   const deleteMutation = useMutation({
@@ -60,12 +83,16 @@ export default function Dashboard() {
         <TransactionDialog />
       </div>
 
-      <DashboardStats transactions={transactions || []} />
-      <DashboardChart transactions={transactions || []} />
+      <DashboardStats transactions={filteredTransactions || []} />
+      <DashboardChart transactions={filteredTransactions || []} />
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Transactions</CardTitle>
+          <DateRangePicker 
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+          />
         </CardHeader>
         <CardContent>
           <Table>
@@ -81,7 +108,7 @@ export default function Dashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions?.map((transaction) => (
+              {filteredTransactions?.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>{format(new Date(transaction.date), "PP")}</TableCell>
                   <TableCell className="capitalize">{transaction.type}</TableCell>
