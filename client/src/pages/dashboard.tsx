@@ -2,16 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Transaction } from "@shared/schema";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns";
+import { isWithinInterval, parseISO, startOfDay, endOfDay, format } from "date-fns";
 import DashboardStats from "@/components/dashboard-stats";
-import DashboardChart from "@/components/dashboard-chart";
 import TransactionDialog from "@/components/transaction-dialog";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
 import { PencilIcon, Trash2Icon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -44,6 +42,16 @@ export default function Dashboard() {
       end: endOfDay(dateRange.from),
     });
   });
+
+  // Group transactions by date
+  const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
+    const date = format(new Date(transaction.date), 'yyyy-MM-dd');
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(transaction);
+    return groups;
+  }, {} as Record<string, Transaction[]>);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -96,50 +104,59 @@ export default function Dashboard() {
           />
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Account</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTransactions?.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{format(new Date(transaction.date), "PP")}</TableCell>
-                  <TableCell className="capitalize">{transaction.type}</TableCell>
-                  <TableCell className="capitalize">{transaction.accountType}</TableCell>
-                  <TableCell>{transaction.category}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell>${Number(transaction.amount).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setEditingTransaction(transaction)}
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteMutation.mutate(transaction.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2Icon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+          <div className="space-y-6">
+            {groupedTransactions && Object.entries(groupedTransactions)
+              .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
+              .map(([date, transactions]) => (
+                <div key={date} className="space-y-4">
+                  <h3 className="font-medium text-muted-foreground">
+                    {format(new Date(date), 'MMMM d, yyyy')}
+                  </h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Account</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell className="capitalize">{transaction.type}</TableCell>
+                          <TableCell className="capitalize">{transaction.accountType}</TableCell>
+                          <TableCell>{transaction.category}</TableCell>
+                          <TableCell>{transaction.description}</TableCell>
+                          <TableCell>${Number(transaction.amount).toFixed(2)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setEditingTransaction(transaction)}
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteMutation.mutate(transaction.id)}
+                                disabled={deleteMutation.isPending}
+                              >
+                                <Trash2Icon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+          </div>
         </CardContent>
       </Card>
       <EditTransactionDialog
