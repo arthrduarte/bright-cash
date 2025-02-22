@@ -15,7 +15,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-primary">FinTrack</h1>
+          <h1 className="text-2xl font-bold text-primary">Bright Cash</h1>
         </div>
         <nav className="px-4 space-y-2">
           {sidebarLinks.map(({ href, label, icon: Icon }) => (

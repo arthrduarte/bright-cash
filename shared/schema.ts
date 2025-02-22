@@ -1,5 +1,3 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const transactionCategories = [
@@ -23,25 +21,18 @@ export const transactionCategories = [
 export const transactionTypes = ["expense", "income", "investment"] as const;
 export const accountTypes = ["chequing", "credit"] as const;
 
-export const transactions = sqliteTable("transactions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  type: text("type", { enum: transactionTypes }).notNull(),
-  category: text("category", { enum: transactionCategories }),  // Remove notNull constraint
-  accountType: text("account_type", { enum: accountTypes }).notNull(),
-  amount: real("amount").notNull(),
-  description: text("description").notNull(),
-  date: integer("date", { mode: "timestamp" }).notNull(),
+export const transactionSchema = z.object({
+  id: z.number().optional(),
+  type: z.enum(transactionTypes),
+  category: z.enum(transactionCategories).optional(),
+  accountType: z.enum(accountTypes),
+  amount: z.number().positive(),
+  description: z.string(),
+  date: z.coerce.date()
 });
 
-const baseTransactionSchema = createInsertSchema(transactions)
-  .omit({ id: true })
-  .extend({
-    amount: z.number().positive(),
-    date: z.coerce.date(),
-  });
-
 // Create a refined schema that requires category only for expense type
-export const insertTransactionSchema = baseTransactionSchema.superRefine((data, ctx) => {
+export const insertTransactionSchema = transactionSchema.omit({ id: true }).superRefine((data, ctx) => {
   if (data.type === "expense" && !data.category) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -51,5 +42,5 @@ export const insertTransactionSchema = baseTransactionSchema.superRefine((data, 
   }
 });
 
+export type Transaction = z.infer<typeof transactionSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
-export type Transaction = typeof transactions.$inferSelect;

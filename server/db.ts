@@ -1,20 +1,15 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import * as schema from "@shared/schema";
 
 // Create the database file if it doesn't exist
-const sqlite = new Database("sqlite.db");
+const db = new Database("sqlite.db");
 
 // Create tables
-const db = drizzle(sqlite, { schema });
-
-// Initialize the database with schema
-db.run(`CREATE TABLE IF NOT EXISTS transactions (
+db.exec(`CREATE TABLE IF NOT EXISTS transactions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  type TEXT NOT NULL,
-  category TEXT,
-  account_type TEXT NOT NULL,
-  amount REAL NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('expense', 'income', 'investment')),
+  category TEXT CHECK (category IN ('Housing', 'Utilities', 'Groceries', 'Dining Out', 'Transportation', 'Subscriptions', 'Entertainment', 'Health & Wellness', 'Clothing', 'Education', 'Savings & Investments', 'Personal Care', 'Gifts', 'Travel', 'Miscellaneous')),
+  account_type TEXT NOT NULL CHECK (account_type IN ('chequing', 'credit')),
+  amount REAL NOT NULL CHECK (amount > 0),
   description TEXT NOT NULL,
   date INTEGER NOT NULL
 )`);

@@ -1,6 +1,5 @@
-import { Transaction, InsertTransaction, transactions } from "@shared/schema";
+import { Transaction, InsertTransaction } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getTransactions(): Promise<Transaction[]>;
@@ -11,28 +10,60 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getTransactions(): Promise<Transaction[]> {
-    return await db.select().from(transactions);
+    const stmt = db.prepare(`SELECT * FROM transactions`);
+    const rows = stmt.all() as Transaction[];
+    return rows.map(row => ({
+      ...row,
+      date: new Date(row.date)
+    }));
   }
 
-  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    const [transaction] = await db
-      .insert(transactions)
-      .values(insertTransaction)
-      .returning();
-    return transaction;
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const stmt = db.prepare(`
+      INSERT INTO transactions (type, category, account_type, amount, description, date)
+      VALUES (@type, @category, @accountType, @amount, @description, @date)
+      RETURNING *
+    `);
+    
+    const result = stmt.get({
+      ...transaction,
+      date: transaction.date.getTime()
+    }) as Transaction;
+    
+    return {
+      ...result,
+      date: new Date(result.date)
+    };
   }
 
-  async updateTransaction(id: number, updateTransaction: InsertTransaction): Promise<Transaction> {
-    const [transaction] = await db
-      .update(transactions)
-      .set(updateTransaction)
-      .where(eq(transactions.id, id))
-      .returning();
-    return transaction;
+  async updateTransaction(id: number, transaction: InsertTransaction): Promise<Transaction> {
+    const stmt = db.prepare(`
+      UPDATE transactions 
+      SET type = @type,
+          category = @category,
+          account_type = @accountType,
+          amount = @amount,
+          description = @description,
+          date = @date
+      WHERE id = @id
+      RETURNING *
+    `);
+    
+    const result = stmt.get({
+      ...transaction,
+      id,
+      date: transaction.date.getTime()
+    }) as Transaction;
+    
+    return {
+      ...result,
+      date: new Date(result.date)
+    };
   }
 
   async deleteTransaction(id: number): Promise<void> {
-    await db.delete(transactions).where(eq(transactions.id, id));
+    const stmt = db.prepare('DELETE FROM transactions WHERE id = ?');
+    stmt.run(id);
   }
 }
 
