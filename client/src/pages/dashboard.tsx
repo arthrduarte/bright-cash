@@ -28,28 +28,29 @@ export default function Dashboard() {
   const filteredTransactions = transactions?.filter((transaction) => {
     if (!dateRange?.from) return true;
 
+    // Ensure we're using UTC dates for comparison
     const transactionDate = new Date(transaction.date);
+    transactionDate.setHours(0, 0, 0, 0);
 
-    if (dateRange.to) {
-      return isWithinInterval(transactionDate, {
-        start: startOfDay(dateRange.from),
-        end: endOfDay(dateRange.to),
-      });
-    }
+    const fromDate = startOfDay(dateRange.from);
+    const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
 
     return isWithinInterval(transactionDate, {
-      start: startOfDay(dateRange.from),
-      end: endOfDay(dateRange.from),
+      start: fromDate,
+      end: toDate,
     });
   });
 
-  // Group transactions by date
+  // Group transactions by date accounting for timezone
   const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
-    const date = format(new Date(transaction.date), 'yyyy-MM-dd');
-    if (!groups[date]) {
-      groups[date] = [];
+    // Create date string in local timezone
+    const date = new Date(transaction.date);
+    const dateStr = format(date, 'yyyy-MM-dd');
+
+    if (!groups[dateStr]) {
+      groups[dateStr] = [];
     }
-    groups[date].push(transaction);
+    groups[dateStr].push(transaction);
     return groups;
   }, {} as Record<string, Transaction[]>);
 

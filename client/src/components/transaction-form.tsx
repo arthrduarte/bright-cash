@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { EXPENSE_CATEGORIES } from "@/lib/constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -37,7 +37,7 @@ export default function TransactionForm({ transaction, onSuccess }: TransactionF
       accountType: "chequing",
       amount: 0,
       description: "",
-      date: new Date(),
+      date: startOfDay(new Date()), // Ensure we start with midnight of current day
     },
   });
 
