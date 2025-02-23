@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id          String    @id @default(uuid())
+  amount      Float
+  type        String    // "INCOME" or "EXPENSE"
+  description String
+  date        DateTime  @default(now())
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  isRecurring Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([categoryId])
+}
+
+model Category {
+  id                    String                 @id @default(uuid())
+  name                  String                 @unique
+  type                  String                 // "INCOME" or "EXPENSE"
+  transactions          Transaction[]
+  recurringTransactions RecurringTransaction[]
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+}
+
+model Goal {
+  id            String    @id @default(uuid())
+  name          String
+  targetAmount  Float
+  currentAmount Float     @default(0)
+  deadline      DateTime?
+  completed     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model RecurringTransaction {
+  id          String    @id @default(uuid())
+  amount      Float
+  type        String    // "INCOME" or "EXPENSE"
+  description String
+  frequency   String    // "DAILY", "WEEKLY", "MONTHLY", "YEARLY"
+  startDate   DateTime
+  endDate     DateTime?
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([categoryId])
+}
