@@ -46,8 +46,8 @@ export default function CashflowChart({ transactions }: CashflowChartProps) {
       <CardHeader>
         <CardTitle>Monthly Cashflow</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px] w-full">
+      <CardContent className="p-0 sm:p-6">
+        <div className="h-[200px] sm:h-[300px] w-full">
           <BarChart
             borderRadius={10}
             dataset={monthlyData}
@@ -56,7 +56,8 @@ export default function CashflowChart({ transactions }: CashflowChartProps) {
               dataKey: 'month',
               tickLabelStyle: {
                 angle: 0,
-                fontSize: 16,
+                fontSize: 12,
+                textAnchor: 'middle',
               },
             }]}
             yAxis={[{
@@ -70,32 +71,39 @@ export default function CashflowChart({ transactions }: CashflowChartProps) {
                 dataKey: 'expenses',
                 label: 'Expenses',
                 stack: 'stack',
-                color: '#F43F5E', // Red color
+                color: '#F43F5E',
               },
               { 
                 dataKey: 'income',
                 label: 'Income',
                 stack: 'stack',
-                color: '#10B981', // Green color
+                color: '#10B981',
               },
             ]}
-            height={300}
+            height={200}
             margin={{
               top: 10,
-              right: 10,
-              bottom: 50,
-              left: 10,
+              right: 5,
+              bottom: 30,
+              left: 5,
             }}
             slotProps={{
               legend: {
-                hidden: true,
+                hidden: true
               },
             }}
             sx={{
               '& .MuiChartsAxis-line': { display: 'none' },
               '& .MuiChartsAxis-tick': { display: 'none' },
               '& .MuiChartsGrid-root': { display: 'none' },
-              '& .MuiChartsAxis-tickLabel': { fill: '#64748B' },
+              '& .MuiChartsAxis-tickLabel': { 
+                fill: '#64748B',
+                fontSize: '0.75rem',
+              },
+              '& .MuiChartsLegend-root': {
+                marginTop: '8px',
+                fontSize: '0.75rem',
+              },
             }}
           />
         </div>
